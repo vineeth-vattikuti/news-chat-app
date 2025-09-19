@@ -1,4 +1,3 @@
-// src/dataset.ts
 import { readFileSync } from 'node:fs';
 
 export type Article = {
