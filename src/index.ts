@@ -3,35 +3,32 @@ import cors from 'cors';
 import { CONFIG } from './config';
 import { loadDataset } from './dataset';
 import { initRetriever } from './retrieval/retrieval';
+import { assertOllamaAvailable, healthPayload } from './ollama';
+import { mountAskRoute } from './routes/ask';
 import { mountDebugRoutes } from './routes/debug';
 
-const app = express();
-app.use(cors());
-app.use(express.json({ limit: '1mb' }));
+async function main() {
+  await assertOllamaAvailable();
+  const articles = loadDataset(CONFIG.NEWS_JSON_PATH);
+  const retriever = initRetriever(articles);
 
-// Load data and build retriever
-const articles = loadDataset(CONFIG.NEWS_JSON_PATH);
-const retriever = initRetriever(articles);
+  const app = express();
+  app.use(cors());
+  app.use(express.json({ limit: '1mb' }));
 
-// Stash for later use by /api/ask
-app.locals.retriever = retriever;
-app.locals.articlesCount = articles.length;
+  const api = express.Router();
+  api.get('/health', (_req, res) => res.json(healthPayload(articles.length)));
+  mountDebugRoutes(api, retriever);
+  mountAskRoute(api, retriever);
 
-app.get('/api/health', (_req, res) => {
-  res.json({
-    ok: true,
-    articles: articles.length,
-    message: 'API running; retriever ready'
+  app.use('/api', api);
+
+  app.listen(CONFIG.PORT, () => {
+    console.log(`[api] listening on http://localhost:${CONFIG.PORT}`);
   });
-});
+}
 
-// Debug routes
-const api = express.Router();
-mountDebugRoutes(api, retriever);
-app.use('/api', api);
-
-app.listen(CONFIG.PORT, () => {
-  console.log(`[api] listening on http://localhost:${CONFIG.PORT}`);
-  console.log(`[api] dataset: ${articles.length} articles; retriever initialized`);
-  console.log(`[api] try: GET /api/debug/search?q=NVDA`);
+main().catch(err => {
+  console.error('[api] fatal:', err);
+  process.exit(1);
 });
