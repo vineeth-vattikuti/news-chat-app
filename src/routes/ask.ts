@@ -36,6 +36,7 @@ export function mountAskRoute(r: Router, retriever: Retriever) {
                 bullets: modelOut.bullets,
                 citations: modelOut.citations,
                 usedDocIds: validUsed,
+                context: modelOut.context
             });
         } catch (err: any) {
             return res.status(500).json({ ok: false, error: err?.message ?? String(err) });
