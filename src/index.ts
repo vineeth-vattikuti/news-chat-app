@@ -8,27 +8,27 @@ import { mountAskRoute } from './routes/ask';
 import { mountDebugRoutes } from './routes/debug';
 
 async function main() {
-  await assertOllamaAvailable();
-  const articles = loadDataset(CONFIG.NEWS_JSON_PATH);
-  const retriever = initRetriever(articles);
+    await assertOllamaAvailable();
+    const articles = loadDataset(CONFIG.NEWS_JSON_PATH);
+    const retriever = initRetriever(articles);
 
-  const app = express();
-  app.use(cors());
-  app.use(express.json({ limit: '1mb' }));
+    const app = express();
+    app.use(cors());
+    app.use(express.json({ limit: '1mb' }));
 
-  const api = express.Router();
-  api.get('/health', (_req, res) => res.json(healthPayload(articles.length)));
-  mountDebugRoutes(api, retriever);
-  mountAskRoute(api, retriever);
+    const api = express.Router();
+    api.get('/health', (_req, res) => res.json(healthPayload(articles.length)));
+    mountDebugRoutes(api, retriever);
+    mountAskRoute(api, retriever);
 
-  app.use('/api', api);
+    app.use('/api', api);
 
-  app.listen(CONFIG.PORT, () => {
-    console.log(`[api] listening on http://localhost:${CONFIG.PORT}`);
-  });
+    app.listen(CONFIG.PORT, () => {
+        console.log(`[api] listening on http://localhost:${CONFIG.PORT}`);
+    });
 }
 
 main().catch(err => {
-  console.error('[api] fatal:', err);
-  process.exit(1);
+    console.error('[api] fatal:', err);
+    process.exit(1);
 });
