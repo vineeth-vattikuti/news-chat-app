@@ -3,6 +3,7 @@ import cors from 'cors';
 import { CONFIG } from './config';
 import { loadDataset } from './dataset';
 import { initRetriever } from './retrieval/retrieval';
+import { mountDebugRoutes } from './routes/debug';
 
 const app = express();
 app.use(cors());
@@ -19,12 +20,18 @@ app.locals.articlesCount = articles.length;
 app.get('/api/health', (_req, res) => {
   res.json({
     ok: true,
-    articles: app.locals.articlesCount,
+    articles: articles.length,
     message: 'API running; retriever ready'
   });
 });
 
+// Debug routes
+const api = express.Router();
+mountDebugRoutes(api, retriever);
+app.use('/api', api);
+
 app.listen(CONFIG.PORT, () => {
   console.log(`[api] listening on http://localhost:${CONFIG.PORT}`);
   console.log(`[api] dataset: ${articles.length} articles; retriever initialized`);
+  console.log(`[api] try: GET /api/debug/search?q=NVDA`);
 });
