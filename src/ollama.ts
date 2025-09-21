@@ -13,11 +13,34 @@ export async function assertOllamaAvailable(): Promise<void> {
     }
 }
 
-
 export function healthPayload(articleCount: number) {
     return { ok: true, provider: 'ollama', model: CONFIG.OLLAMA_MODEL, articles: articleCount };
 }
 
+export async function warmUpModel(prompt = 'ok'): Promise<void> {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000); // 8s guard
+    try {
+        const res = await fetch(`${CONFIG.OLLAMA_BASE_URL}/api/generate`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+                model: CONFIG.OLLAMA_MODEL,
+                prompt,
+                stream: false,
+                // no JSON format needed; we ignore output
+                options: { temperature: 0, top_p: 1, num_predict: 1 }
+            }),
+            signal: controller.signal,
+        });
+        // best-effort: read and discard
+        if (res.ok) { await res.text().catch(() => { }); }
+    } catch {
+        // swallow — warmup failure should not crash the server
+    } finally {
+        clearTimeout(timeout);
+    }
+}
 
 export async function generateSummary(prompt: string): Promise<ModelAnswer> {
     const res = await fetch(`${CONFIG.OLLAMA_BASE_URL}/api/generate`, {

@@ -3,12 +3,20 @@ import cors from 'cors';
 import { CONFIG } from './config';
 import { loadDataset } from './dataset';
 import { initRetriever } from './retrieval/retrieval';
-import { assertOllamaAvailable, healthPayload } from './ollama';
+import { assertOllamaAvailable, healthPayload, warmUpModel } from './ollama';
 import { mountAskRoute } from './routes/ask';
 import { mountDebugRoutes } from './routes/debug';
 
 async function main() {
     await assertOllamaAvailable();
+
+    // Fire-and-forget warmup (don’t block server if it fails)
+    warmUpModel().then(() => {
+        console.log('[api] model warm-up complete');
+    }).catch(() => {
+        console.log('[api] model warm-up skipped (non-fatal)');
+    });
+
     const articles = loadDataset(CONFIG.NEWS_JSON_PATH);
     const retriever = initRetriever(articles);
 
