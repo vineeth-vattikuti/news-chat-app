@@ -14,7 +14,6 @@ export type ModelAnswer = {
     bullets?: string[]; // present when style === 'bullets'
     citations: { doc_id: number; spans?: string[] }[];
     used_doc_ids: number[];
-    context: string[];
 };
 
 
@@ -34,10 +33,8 @@ export function buildPrompt(query: string, docs: RankedDoc[], style: 'bullets' |
         answer: "string?",
         bullets: ["string"],
         citations: [{ doc_id: 0, spans: ["string?"] }],
-        used_doc_ids: [0],
-        context: ["string"]
+        used_doc_ids: [0]
     }, null, 2);
-
 
     return [
         `You are a precise summarizer grounded ONLY in the provided documents.`,
@@ -54,7 +51,6 @@ export function buildPrompt(query: string, docs: RankedDoc[], style: 'bullets' |
         `- If style is "bullets", return 3-6 short bullets and omit 'answer'.`,
         `- If style is "paragraph", return a concise paragraph with at least 4 full sentences in 'answer' and omit 'bullets'.`,
         `- 'citations' must list only doc_ids from 'used_doc_ids'.`,
-        `- 'used_doc_ids' must be the set of document ids referenced.`,
-        `- 'context' must be the set of documents provided.`
+        `- 'used_doc_ids' must be the set of document ids referenced.`
     ].join('\n');
 }
