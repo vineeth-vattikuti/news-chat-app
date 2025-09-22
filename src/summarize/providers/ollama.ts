@@ -1,4 +1,3 @@
-// src/summarize/providers/ollama.ts
 import { CONFIG } from '../../config';
 import type { Summarizer, ModelAnswer } from '../provider';
 
