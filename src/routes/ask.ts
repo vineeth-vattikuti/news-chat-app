@@ -3,6 +3,8 @@ import type { Retriever } from '../retrieval/retrieval';
 import { buildPrompt, type AskBody } from '../summarize/prompt';
 import type { Summarizer } from '../summarize/provider';
 
+const DEFAULT_K = 4;
+
 export function mountAskRoute(r: Router, retriever: Retriever, summarizer: Summarizer) {
     r.post('/ask', async (req, res) => {
         try {
@@ -10,7 +12,7 @@ export function mountAskRoute(r: Router, retriever: Retriever, summarizer: Summa
             const query = String(body?.query ?? '').trim();
             if (!query) return res.status(400).json({ ok: false, error: 'Missing query' });
 
-            const k = Math.min(8, Math.max(1, body?.k ?? 6));
+            const k = DEFAULT_K;
             const style = body?.style === 'paragraph' ? 'paragraph' : 'bullets';
 
             const docs = retriever.search(query, k);

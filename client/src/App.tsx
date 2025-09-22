@@ -14,7 +14,6 @@ export default function App() {
     const [q, setQ] = useState('');
     const [style, setStyle] = useState<'bullets' | 'paragraph'>('bullets');
 
-    const [k, setK] = useState(6);
     const [loading, setLoading] = useState(false);
     const [resp, setResp] = useState<AskResponse | null>(null);
     const [err, setErr] = useState<string | null>(null);
@@ -31,7 +30,7 @@ export default function App() {
             const r = await fetch('/api/ask', {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ query: q, style, k })
+                body: JSON.stringify({ query: q, style })
             });
             const data = await r.json();
             if (!r.ok || !data.ok) {
@@ -58,8 +57,6 @@ export default function App() {
                     <option value="bullets">bullets</option>
                     <option value="paragraph">paragraph</option>
                 </select>
-                <label>Top K</label>
-                <input type="number" min={1} max={8} value={k} onChange={e => setK(Number(e.target.value) || 6)} style={{ width: 64 }} />
                 <button onClick={ask} disabled={disabled}>{loading ? 'Asking…' : 'Ask'}</button>
             </div>
 
@@ -69,7 +66,7 @@ export default function App() {
                 onChange={e => setQ(e.target.value)}
                 rows={6}
                 style={{ width: '100%', marginBottom: 16 }}
-                placeholder="Ask about the dataset…"
+                placeholder="What would you like to know about recent financial news?"
             />
 
 
