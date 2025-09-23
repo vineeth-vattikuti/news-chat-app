@@ -9,15 +9,6 @@ import { mountDebugRoutes } from './routes/debug';
 import { makeSummarizerFromEnv } from './summarize/factory';
 
 async function main() {
-    await assertOllamaAvailable();
-
-    // Fire-and-forget warmup (don’t block server if it fails)
-    warmUpModel().then(() => {
-        console.log('[api] model warm-up complete');
-    }).catch(() => {
-        console.log('[api] model warm-up skipped (non-fatal)');
-    });
-
     const articles = loadDataset(CONFIG.NEWS_JSON_PATH);
     const retriever = initRetriever(articles);
 
@@ -26,6 +17,18 @@ async function main() {
     app.use(express.json({ limit: '1mb' }));
 
     const summarizer = makeSummarizerFromEnv();
+
+    const info = summarizer.info();
+    if (info.provider === 'ollama') {
+        await assertOllamaAvailable();
+        // Fire-and-forget warmup (don’t block server if it fails)
+        warmUpModel().then(() => {
+            console.log('[api] model warm-up complete');
+        }).catch((err) => {
+            console.warn('[api] model warm-up failed (non-fatal): ', err.message);
+        });
+    }
+
     const api = express.Router();
     api.get('/health', (_req, res) => {
         const info = summarizer.info();
